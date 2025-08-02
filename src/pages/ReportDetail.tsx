@@ -1,0 +1,81 @@
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from '../api/axios';
+import type { Report } from '../types';
+
+export default function ReportDetail() {
+  const { id } = useParams();
+  const [report, setReport] = useState<Report | null>(null);
+  const [reason, setReason] = useState('');
+  const [fine, setFine] = useState(0);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchDetail = async () => {
+      try {
+        const res = await axios.get(`/reports/${id}`);
+        console.log('상세 응답:', res.data);
+        if (Array.isArray(res.data.results) && res.data.results.length > 0) {
+          setReport(res.data.results[0]);
+        } else {
+          throw new Error('신고 정보 없음');
+        }
+      } catch (err) {
+        console.error('❌ 상세 정보 불러오기 실패:', err);
+        alert('상세 정보를 불러오지 못했습니다.');
+      }
+    };
+    fetchDetail();
+  }, [id]);
+
+  const handleAction = async (status: 'APPROVED' | 'REJECTED') => {
+   try {
+     await axios.patch(`/reports/${id}`, {
+       approve: status === 'APPROVED',
+       reason,
+       fine: status === 'APPROVED' ? fine : undefined,
+     });
+     alert(`신고가 ${status === 'APPROVED' ? '승인' : '반려'}되었습니다.`);
+     navigate('/main/reports');
+   }  catch (err) {
+     alert('처리에 실패했습니다.');
+   }
+ };
+
+  if (!report) return <div>로딩 중...</div>;
+
+  return (
+    <div>
+      <h2>신고 상세</h2>
+      <p><strong>제목:</strong> {report.title}</p>
+      <p><strong>신고자:</strong> {report.reporterName}</p>
+      <p><strong>피신고자:</strong> {report.targetName}</p>
+      <p><strong>신고 시각:</strong> {new Date(report.reportedAt).toLocaleString()}</p>
+      <p><strong>상태:</strong> {report.status}</p>
+      <p><strong>AI 분석 결과:</strong> {report.aiResult}</p>
+      <p><strong>감지된 브랜드:</strong> {report.detectedBrand}</p>
+      <p><strong>위치:</strong> {report.location}</p>
+      <p><strong>내용:</strong> {report.reportContent}</p>
+
+      <div>
+        <label>
+          사유:
+          <input value={reason} onChange={(e) => setReason(e.target.value)} />
+        </label>
+      </div>
+      <div>
+        <label>
+          벌금 (원):
+          <input
+            type="number"
+            value={fine}
+            onChange={(e) => setFine(parseInt(e.target.value) || 0)}
+          />
+        </label>
+      </div>
+
+      <button onClick={() => handleAction('APPROVED')}>승인</button>
+      <button onClick={() => handleAction('REJECTED')}>반려</button>
+    </div>
+  );
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from '../api/axios';
 import { useNavigate } from 'react-router-dom';
 import type { Report } from '../types';
+import Notice from '../components/Notice';
 
 export default function ReportList() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -14,11 +15,8 @@ export default function ReportList() {
         const data = res.data.results;
         if (Array.isArray(data)) {
           setReports(data);
-        } else {
-          console.error('results가 배열이 아님:', data);
         }
       } catch (err) {
-        console.error('❌ 목록 불러오기 실패:', err);
         alert('신고 목록을 불러오지 못했습니다.');
       }
     };
@@ -29,7 +27,7 @@ export default function ReportList() {
     try {
       const brand = localStorage.getItem('brand');
       if (!brand) {
-        alert('브랜드 정보가 없습니다. 다시 로그인해주세요.');
+        alert('브랜드 정보가 없습니다. 다시 검색 해주세요.');
         return;
       }
 
@@ -48,27 +46,30 @@ export default function ReportList() {
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('❌ 엑셀 다운로드 실패:', err);
       alert('엑셀 다운로드에 실패했습니다.');
     }
   };
 
   return (
-    <div>
-      <h2>신고 목록</h2>
-      <button onClick={() => navigate('/main')}>홈으로 돌아가기</button>
-      <button onClick={handleDownloadExcel}>Excel 다운로드</button>
-      <ul>
-        {reports.map((report) => (
-          <li
-            key={report.id}
-            onClick={() => navigate(`/main/reports/${report.id}`)}
-            style={{ cursor: 'pointer' }}
-          >
-            <strong>{report.title}</strong> - 상태: {report.status} - 작성자: {report.reporterName}
-          </li>
-        ))}
-      </ul>
+    <div style={{ display: 'flex', gap: '2rem' }}>
+      <div style={{ flex: 3 }}>
+        <h2>신고 목록</h2>
+        <button onClick={() => navigate('/main')}>홈으로 돌아가기</button>
+        <ul>
+          {reports.map((report) => (
+            <li
+              key={report.id}
+              onClick={() => navigate(`/main/reports/${report.id}`)}
+              style={{ cursor: 'pointer' }}
+            >
+              <strong>{report.title}</strong> - 상태: {report.status} - 작성자: {report.reporterName}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div style={{ flex: 1 }}>
+        <Notice />
+      </div>
     </div>
   );
 }

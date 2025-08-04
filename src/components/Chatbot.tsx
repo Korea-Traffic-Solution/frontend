@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from '../api/axios';
+import axios from 'axios';
 
 export default function Chatbot() {
   const [input, setInput] = useState('');
@@ -7,8 +7,10 @@ export default function Chatbot() {
 
   const handleSend = async () => {
     try {
-      const res = await axios.post('/chatbot', { message: input });
-      setResponse(res.data.results);
+      const res = await axios.post('http://localhost:8000/chat', {
+        message: input,
+      });
+      setResponse(res.data.response); // FastAPI가 {"response": "..."} 식으로 보내줘야 함
     } catch (err) {
       alert('챗봇 응답 실패');
     }

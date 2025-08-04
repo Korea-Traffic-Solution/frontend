@@ -6,9 +6,9 @@ export default function Notice() {
   ];
 
   return (
-    <div style={{ border: '1px solid gray', padding: '1rem', width: '300px' }}>
-      <h3>📢 공지사항</h3>
-      <ul style={{ paddingLeft: '1rem' }}>
+    <div className="bg-white shadow-md rounded-lg p-4 w-full max-w-sm">
+      <h3 className="text-lg font-semibold mb-2">📢 공지사항</h3>
+      <ul className="list-disc list-inside space-y-1">
         {notices.map((notice, index) => (
           <li key={index}>{notice}</li>
         ))}

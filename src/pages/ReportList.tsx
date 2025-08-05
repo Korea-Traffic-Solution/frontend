@@ -51,37 +51,161 @@ export default function ReportList() {
   };
 
   return (
-    <div className="flex gap-8 p-6">
-      <div className="flex-1 bg-white p-6 rounded shadow space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold">신고 목록</h2>
-          <button
-            onClick={handleDownloadExcel}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-          >
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-color)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      {/* 왼쪽 사이드바 */}
+      <div className="nav-sidebar">
+        <div className="sidebar-logo">
+          <h2>TRAFFICSOLUTION</h2>
+        </div>
+        
+        <nav style={{ flex: 1, paddingTop: '16px' }}>
+          <div className="nav-item" onClick={() => navigate('/main')}>
+            <span className="nav-item-icon">🏠</span>
+            HOME
+          </div>
+          
+          <div className="nav-item active">
+            <span className="nav-item-icon">📋</span>
+            신고 목록
+          </div>
+          
+          <div className="nav-item" onClick={() => navigate('/main/monthly')}>
+            <span className="nav-item-icon">📅</span>
+            이번 달 신고
+          </div>
+          
+          <div className="nav-item" onClick={() => navigate('/main/excel')}>
+            <span className="nav-item-icon">📥</span>
             엑셀 다운로드
+          </div>
+          
+          <div className="nav-item" onClick={() => navigate('/main/statistics')}>
+            <span className="nav-item-icon">📊</span>
+            통계
+          </div>
+        </nav>
+        
+        <div className="sidebar-footer">
+          <button className="outline" onClick={() => navigate('/main')}>
+            홈으로 돌아가기
           </button>
         </div>
-        <button
-          onClick={() => navigate('/main')}
-          className="text-blue-500 underline"
-        >
-          홈으로 돌아가기
-        </button>
-        <ul className="space-y-2">
-          {reports.map((report) => (
-            <li
-              key={report.id}
-              onClick={() => navigate(`/main/reports/${report.id}`)}
-              className="cursor-pointer p-3 border rounded hover:bg-gray-100"
-            >
-              <strong>{report.title}</strong> - 상태: {report.status} - 작성자: {report.reporterName}
-            </li>
-          ))}
-        </ul>
       </div>
-      <div className="w-1/3">
-        <Notice />
+
+      {/* 메인 컨텐츠 */}
+      <div className="main-layout">
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">신고 목록</h1>
+            <p className="page-subtitle">전체 신고 현황을 확인하고 관리하세요</p>
+          </div>
+          <div className="header-user-info">
+            <span>Logout</span>
+            <span>🔍 검색</span>
+            <span>A 관리자</span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '24px', padding: '32px', flex: 1 }}>
+          <div style={{ flex: 1 }}>
+            {/* 통계 카드들 */}
+            <div className="stats-grid">
+              <div className="stats-card gradient-card">
+                <div className="stats-card">
+                  <div className="stats-number">{reports.length}</div>
+                  <div className="stats-label">전체 신고</div>
+                  <div className="stats-percentage">100%</div>
+                </div>
+              </div>
+              
+              <div className="stats-card gradient-card blue">
+                <div className="stats-card">
+                  <div className="stats-number">
+                    {reports.filter(r => r.status === 'APPROVED').length}
+                  </div>
+                  <div className="stats-label">승인 완료</div>
+                  <div className="stats-percentage">
+                    {reports.length > 0 ? Math.round((reports.filter(r => r.status === 'APPROVED').length / reports.length) * 100) : 0}%
+                  </div>
+                </div>
+              </div>
+              
+              <div className="stats-card gradient-card green">
+                <div className="stats-card">
+                  <div className="stats-number">
+                    {reports.filter(r => r.status === 'PENDING').length}
+                  </div>
+                  <div className="stats-label">대기 중</div>
+                  <div className="stats-percentage">
+                    {reports.length > 0 ? Math.round((reports.filter(r => r.status === 'PENDING').length / reports.length) * 100) : 0}%
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 신고 목록 */}
+            <div className="card">
+              <div className="card-header-with-border">
+                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#333', margin: 0 }}>신고 목록</h3>
+                <p style={{ color: '#666', fontSize: '14px', margin: '4px 0 0 0' }}>
+                  총 {reports.length}건의 신고가 있습니다
+                </p>
+              </div>
+              
+              <div className="card-body">
+                {reports.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
+                    <p>등록된 신고가 없습니다.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {reports.map((report) => (
+                      <div
+                        key={report.id}
+                        className="report-list-item"
+                        onClick={() => navigate(`/main/reports/${report.id}`)}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                          <div style={{ flex: 1 }}>
+                            <h4 style={{ fontSize: '16px', fontWeight: '600', color: '#333', margin: 0, marginBottom: '8px' }}>
+                              {report.title}
+                            </h4>
+                            <div style={{ display: 'flex', gap: '16px', fontSize: '14px', color: '#666' }}>
+                              <span>신고자: {report.reporterName}</span>
+                              <span>피신고자: {report.targetName}</span>
+                              <span>브랜드: {report.detectedBrand || '미확인'}</span>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <span className={`status-badge status-${report.status.toLowerCase()}`}>
+                              {report.status === 'PENDING' && '대기중'}
+                              {report.status === 'APPROVED' && '승인됨'}
+                              {report.status === 'REJECTED' && '반려됨'}
+                            </span>
+                            <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                              {new Date(report.reportedAt).toLocaleDateString('ko-KR')}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {report.location && (
+                          <div style={{ fontSize: '14px', color: '#666' }}>
+                            📍 {report.location}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ width: '300px' }}>
+            <Notice />
+          </div>
+        </div>
       </div>
     </div>
   );

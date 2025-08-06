@@ -70,19 +70,23 @@ export default function Home() {
       <div className="main-layout">
         {/* 헤더 */}
         <div className="page-header">
-          <div>
-            <h1 className="page-title">관리자 대시보드</h1>
-            <p className="page-subtitle">TRAFFIC SOLUTION 통합 관리 시스템</p>
-          </div>
-          <div className="header-user-info">
-            <span>Logout</span>
-            <span>🔍 검색</span>
-            <span>A 관리자</span>
+          <div className="page-header-content">
+            <div>
+              <h1 className="page-title">관리자 대시보드</h1>
+              <p className="page-subtitle">TRAFFIC SOLUTION 통합 관리 시스템</p>
+            </div>
+            <div className="header-user-info">
+              <span>Logout</span>
+              <span>🔍 검색</span>
+              <span>A 관리자</span>
+            </div>
           </div>
         </div>
 
         {/* 대시보드 컨텐츠 */}
         <div className="page-content">
+          <div className="page-content-inner">
+            <div className="dashboard-grid">
           {/* 기존 버튼들을 카드로 변경 - 기능은 그대로 */}
           <div className="dashboard-grid">
             {/* 신고 목록 버튼 -> 카드 */}
@@ -139,6 +143,8 @@ export default function Home() {
                 </div>
                 <span className="card-icon">📊</span>
               </div>
+            </div>
+          </div>
             </div>
           </div>
         </div>

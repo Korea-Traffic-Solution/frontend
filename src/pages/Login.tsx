@@ -49,7 +49,7 @@ export default function Login() {
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
         border: 'none'
       }}>
-        {/* 로고 영역 */}
+        {/* 로고 */}
         <div style={{ marginBottom: '48px' }}>
           <div style={{
             width: '88px',
@@ -111,9 +111,7 @@ export default function Login() {
                 transition: 'all 0.2s ease'
               }}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleLogin();
-                }
+                if (e.key === 'Enter') handleLogin();
               }}
             />
           </div>
@@ -142,9 +140,7 @@ export default function Login() {
                 transition: 'all 0.2s ease'
               }}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleLogin();
-                }
+                if (e.key === 'Enter') handleLogin();
               }}
             />
           </div>
@@ -167,12 +163,14 @@ export default function Login() {
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 8px 25px rgba(49, 130, 246, 0.4)';
+            const target = e.target as HTMLButtonElement;
+            target.style.transform = 'translateY(-2px)';
+            target.style.boxShadow = '0 8px 25px rgba(49, 130, 246, 0.4)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 15px rgba(49, 130, 246, 0.3)';
+            const target = e.target as HTMLButtonElement;
+            target.style.transform = 'translateY(0)';
+            target.style.boxShadow = '0 4px 15px rgba(49, 130, 246, 0.3)';
           }}
         >
           로그인

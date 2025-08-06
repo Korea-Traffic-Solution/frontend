@@ -77,18 +77,21 @@ export default function Statistics() {
       <div className="main-layout">
         {/* 헤더 */}
         <div className="page-header">
-          <div>
-            <h1 className="page-title">통계 페이지</h1>
-            <p className="page-subtitle">신고 처리 현황 및 통계 분석</p>
-          </div>
-          <div className="header-user-info">
-            <span>Logout</span>
-            <span>🔍 검색</span>
-            <span>A 관리자</span>
+          <div className="page-header-content">
+            <div>
+              <h1 className="page-title">통계 페이지</h1>
+              <p className="page-subtitle">신고 처리 현황 및 통계 분석</p>
+            </div>
+            <div className="header-user-info">
+              <span>Logout</span>
+              <span>🔍 검색</span>
+              <span>A 관리자</span>
+            </div>
           </div>
         </div>
 
         <div className="page-content">
+          <div className="page-content-inner">
           {/* 주요 통계 카드들 */}
           <div className="dashboard-grid" style={{ marginBottom: '30px' }}>
             <div className="card gradient-card">
@@ -295,6 +298,7 @@ export default function Statistics() {
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>

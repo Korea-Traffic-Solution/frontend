@@ -70,18 +70,21 @@ export default function ExcelDownloadPage() {
       <div className="main-layout">
         {/* 헤더 */}
         <div className="page-header">
-          <div>
-            <h1 className="page-title">엑셀 다운로드</h1>
-            <p className="page-subtitle">승인된 신고 데이터를 엑셀 파일로 다운로드</p>
-          </div>
-          <div className="header-user-info">
-            <span>Logout</span>
-            <span>🔍 검색</span>
-            <span>A 관리자</span>
+          <div className="page-header-content">
+            <div>
+              <h1 className="page-title">엑셀 다운로드</h1>
+              <p className="page-subtitle">승인된 신고 데이터를 엑셀 파일로 다운로드</p>
+            </div>
+            <div className="header-user-info">
+              <span>Logout</span>
+              <span>🔍 검색</span>
+              <span>A 관리자</span>
+            </div>
           </div>
         </div>
 
         <div className="page-content">
+          <div className="page-content-inner">
           {/* 다운로드 메인 카드 */}
           <div className="card gradient-card green" style={{ marginBottom: '30px', textAlign: 'center' }}>
             <div style={{ padding: '40px' }}>
@@ -214,6 +217,7 @@ export default function ExcelDownloadPage() {
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>

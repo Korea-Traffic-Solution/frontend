@@ -95,19 +95,22 @@ export default function ReportList() {
       {/* 메인 컨텐츠 */}
       <div className="main-layout">
         <div className="page-header">
-          <div>
-            <h1 className="page-title">신고 목록</h1>
-            <p className="page-subtitle">전체 신고 현황을 확인하고 관리하세요</p>
-          </div>
-          <div className="header-user-info">
-            <span>Logout</span>
-            <span>🔍 검색</span>
-            <span>A 관리자</span>
+          <div className="page-header-content">
+            <div>
+              <h1 className="page-title">신고 목록</h1>
+              <p className="page-subtitle">전체 신고 현황을 확인하고 관리하세요</p>
+            </div>
+            <div className="header-user-info">
+              <span>Logout</span>
+              <span>🔍 검색</span>
+              <span>A 관리자</span>
+            </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '24px', padding: '32px', flex: 1 }}>
-          <div style={{ flex: 1 }}>
+        <div className="page-content">
+          <div className="content-with-sidebar">
+            <div className="content-main">
             {/* 통계 카드들 */}
             <div className="stats-grid">
               <div className="stats-card gradient-card">
@@ -200,10 +203,11 @@ export default function ReportList() {
                 )}
               </div>
             </div>
-          </div>
+                      </div>
 
-          <div style={{ width: '300px' }}>
-            <Notice />
+            <div className="content-sidebar">
+              <Notice />
+            </div>
           </div>
         </div>
       </div>

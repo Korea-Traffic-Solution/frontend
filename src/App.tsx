@@ -7,6 +7,7 @@ import ReportDetail from './pages/ReportDetail';
 import ExcelDownload from './pages/ExcelDownload';
 import MonthlyPage from './pages/MonthlyReports';
 import Statistics from './pages/Statistics';
+import ChatbotPage from './pages/ChatbotPage';
 
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
   const token = localStorage.getItem('token');
@@ -61,13 +62,21 @@ function App() {
           }
         />
         <Route
-          path="/main/statistics"
-          element={
-            <ProtectedRoute>
+           path="/main/statistics"
+           element={
+           <ProtectedRoute>
               <Statistics />
-            </ProtectedRoute>
-          }
-        />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/main/chatbot"
+        element={
+          <ProtectedRoute>
+            <ChatbotPage />
+          </ProtectedRoute>
+        }
+      />
       </Routes>
     </BrowserRouter>
   );

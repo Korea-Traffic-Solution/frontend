@@ -16,61 +16,59 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen font-sans bg-gray-50 text-gray-900">
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<Login />} />
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login />} />
 
-          <Route
-            path="/main"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/main/reports"
-            element={
-              <ProtectedRoute>
-                <ReportList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/main/reports/:id"
-            element={
-              <ProtectedRoute>
-                <ReportDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/main/excel"
-            element={
-              <ProtectedRoute>
-                <ExcelDownload />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/main/monthly"
-            element={
-              <ProtectedRoute>
-                <MonthlyPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/main/statistics"
-            element={
-              <ProtectedRoute>
-                <Statistics />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </div>
+        <Route
+          path="/main"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/main/reports"
+          element={
+            <ProtectedRoute>
+              <ReportList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/main/reports/:id"
+          element={
+            <ProtectedRoute>
+              <ReportDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/main/excel"
+          element={
+            <ProtectedRoute>
+              <ExcelDownload />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/main/monthly"
+          element={
+            <ProtectedRoute>
+              <MonthlyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/main/statistics"
+          element={
+            <ProtectedRoute>
+              <Statistics />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
     </BrowserRouter>
   );
 }

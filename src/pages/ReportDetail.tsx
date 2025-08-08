@@ -9,16 +9,9 @@ export default function ReportDetail() {
   const [report, setReport] = useState<Report | null>(null);
   const [reason, setReason] = useState('');
   const [fine, setFine] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
-
-  // ✅ 현재 날짜 계산
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    weekday: 'short',
-  });
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -33,12 +26,20 @@ export default function ReportDetail() {
       } catch (err) {
         console.error('❌ 상세 정보 불러오기 실패:', err);
         alert('상세 정보를 불러오지 못했습니다.');
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchDetail();
   }, [id]);
 
   const handleAction = async (status: 'APPROVED' | 'REJECTED') => {
+    if (!reason.trim()) {
+      alert('사유를 입력해주세요.');
+      return;
+    }
+
+    setIsProcessing(true);
     try {
       await axios.patch(`/reports/${id}`, {
         approve: status === 'APPROVED',
@@ -49,221 +50,190 @@ export default function ReportDetail() {
       navigate('/main/reports');
     } catch (err) {
       alert('처리에 실패했습니다.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  if (!report) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <div className="loading"></div>
-    </div>
-  );
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return <span className="status-badge status-approved">승인</span>;
+      case 'REJECTED':
+        return <span className="status-badge status-rejected">반려</span>;
+      default:
+        return <span className="status-badge status-pending">대기</span>;
+    }
+  };
 
-  return (
-    <div className="sidebar-layout">
-      <div className="nav-sidebar">
-        <div className="sidebar-logo">
-          <h2>TRAFFICSOLUTION</h2>
-        </div>
-
-        <nav style={{ flex: 1, paddingTop: '16px' }}>
-          <div className="nav-item" onClick={() => navigate('/main')}>
-            <span className="nav-item-icon">🏠</span>
-            HOME
-          </div>
-          <div className="nav-item active" onClick={() => navigate('/main/reports')}>
-            <span className="nav-item-icon">📋</span>
-            신고 목록
-          </div>
-          <div className="nav-item" onClick={() => navigate('/main/monthly')}>
-            <span className="nav-item-icon">📅</span>
-            이번 달 신고
-          </div>
-          <div className="nav-item" onClick={() => navigate('/main/excel')}>
-            <span className="nav-item-icon">📥</span>
-            엑셀 다운로드
-          </div>
-          <div className="nav-item" onClick={() => navigate('/main/statistics')}>
-            <span className="nav-item-icon">📊</span>
-            통계
-          </div>
-        </nav>
-
-        <div className="sidebar-footer">
-          <button className="outline" onClick={() => navigate('/main')}>
-            메인으로 돌아가기
-          </button>
+  if (isLoading) {
+    return (
+      <div className="layout">
+        <div className="main-content">
+          <div className="loading">로딩 중...</div>
         </div>
       </div>
+    );
+  }
 
-      <div className="main-layout">
-        <div className="page-header">
-          <div className="page-header-content">
-            <div>
-              <h1 className="page-title">세부사항 페이지</h1>
-              {/* ✅ 날짜 하드코딩 제거 */}
-              <p className="page-subtitle">{formattedDate}</p>
+  if (!report) {
+    return (
+      <div className="layout">
+        <div className="main-content">
+          <div className="card">
+            <div className="card-body" style={{ textAlign: 'center', padding: '40px' }}>
+              <p>신고를 찾을 수 없습니다.</p>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => navigate('/main/reports')}
+              >
+                목록으로 돌아가기
+              </button>
             </div>
-            <div className="header-user-info">
-              <span>Logout</span>
-              <span>🔍 검색</span>
-              <span>A 관리자</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="layout">
+      <div className="content-with-sidebar">
+        <div className="content-main">
+          {/* 페이지 헤더 */}
+          <div className="page-header">
+            <h1 className="page-title">신고 상세</h1>
+            <p className="page-description">신고 내용을 확인하고 승인 또는 반려를 결정해주세요</p>
+            <div className="page-actions">
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => navigate('/main/reports')}
+              >
+                목록으로 돌아가기
+              </button>
+            </div>
+          </div>
+
+          {/* 신고 정보 */}
+          <div className="card" style={{ marginBottom: '24px' }}>
+            <div className="card-header">
+              <h2 className="card-title">📄 신고 정보</h2>
+            </div>
+            <div className="card-body">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                <div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div>
+                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>제목</span>
+                      <div style={{ fontSize: '16px', fontWeight: '600', marginTop: '4px' }}>{report.title}</div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>신고자</span>
+                      <div style={{ fontSize: '16px', marginTop: '4px' }}>{report.reporterName}</div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>피신고자</span>
+                      <div style={{ fontSize: '16px', marginTop: '4px' }}>{report.targetName}</div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div>
+                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>신고 시각</span>
+                      <div style={{ fontSize: '16px', marginTop: '4px' }}>{new Date(report.reportedAt).toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>상태</span>
+                      <div style={{ marginTop: '4px' }}>{getStatusBadge(report.status)}</div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>감지된 브랜드</span>
+                      <div style={{ fontSize: '16px', marginTop: '4px' }}>{report.detectedBrand || '미확인'}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border-light)' }}>
+                <div style={{ marginBottom: '12px' }}>
+                  <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>위치</span>
+                  <div style={{ fontSize: '16px', marginTop: '4px' }}>{report.location}</div>
+                </div>
+                <div style={{ marginBottom: '12px' }}>
+                  <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>AI 분석 결과</span>
+                  <div style={{ fontSize: '16px', marginTop: '4px' }}>{report.aiResult}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>신고 내용</span>
+                  <div style={{ 
+                    fontSize: '16px', 
+                    marginTop: '4px', 
+                    padding: '12px', 
+                    background: 'var(--secondary-gray)', 
+                    borderRadius: '8px',
+                    lineHeight: '1.6'
+                  }}>
+                    {report.reportContent}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 처리 섹션 */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">⚖️ 신고 처리</h2>
+            </div>
+            <div className="card-body">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="form-group">
+                  <label className="form-label">처리 사유 *</label>
+                  <input 
+                    className="form-input"
+                    placeholder="승인 또는 반려 사유를 입력해주세요"
+                    value={reason} 
+                    onChange={(e) => setReason(e.target.value)}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label className="form-label">벌금 (원)</label>
+                  <input
+                    className="form-input"
+                    type="number"
+                    placeholder="승인 시 부과할 벌금을 입력해주세요"
+                    value={fine}
+                    onChange={(e) => setFine(parseInt(e.target.value) || 0)}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', paddingTop: '12px' }}>
+                  <button 
+                    className="btn btn-success"
+                    onClick={() => handleAction('APPROVED')}
+                    disabled={isProcessing}
+                    style={{ flex: 1 }}
+                  >
+                    {isProcessing ? '처리 중...' : '승인'}
+                  </button>
+                  <button 
+                    className="btn btn-danger"
+                    onClick={() => handleAction('REJECTED')}
+                    disabled={isProcessing}
+                    style={{ flex: 1 }}
+                  >
+                    {isProcessing ? '처리 중...' : '반려'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="page-content">
-          <div className="content-with-sidebar">
-            <div className="content-main">
-              <div className="card gradient-card pink" style={{ marginBottom: '20px' }}>
-                <div style={{ padding: '24px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                    <div>
-                      <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '600' }}>{report.title}</h2>
-                      <p style={{ margin: '4px 0 0 0', color: 'rgba(0,0,0,0.7)', fontSize: '0.9rem' }}>
-                        신고 ID: {report.id} | 신고일: {new Date(report.reportedAt).toLocaleDateString('ko-KR')}
-                      </p>
-                    </div>
-                    <span className={`status-badge status-${report.status.toLowerCase()}`}>
-                      {report.status === 'PENDING' && '대기중'}
-                      {report.status === 'APPROVED' && '승인됨'}
-                      {report.status === 'REJECTED' && '반려됨'}
-                    </span>
-                  </div>
-
-                  <div style={{
-                    width: '200px',
-                    height: '300px',
-                    backgroundColor: '#e9ecef',
-                    borderRadius: '12px',
-                    border: '2px solid var(--primary-color)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '20px',
-                    backgroundImage: 'linear-gradient(45deg, #f8f9fa 25%, transparent 25%), linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f8f9fa 75%), linear-gradient(-45deg, transparent 75%, #f8f9fa 75%)',
-                    backgroundSize: '20px 20px',
-                    backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
-                  }}>
-                    <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-                      <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🛴</div>
-                      <div style={{ fontSize: '0.8rem' }}>신고 이미지</div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                    <div style={{ minWidth: '150px' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'rgba(0,0,0,0.6)', marginBottom: '4px' }}>신고자</div>
-                      <div style={{ fontWeight: '500' }}>{report.reporterName}</div>
-                    </div>
-                    <div style={{ minWidth: '150px' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'rgba(0,0,0,0.6)', marginBottom: '4px' }}>피신고자</div>
-                      <div style={{ fontWeight: '500' }}>{report.targetName}</div>
-                    </div>
-                    <div style={{ minWidth: '150px' }}>
-                      <div style={{ fontSize: '0.8rem', color: 'rgba(0,0,0,0.6)', marginBottom: '4px' }}>감지된 브랜드</div>
-                      <div style={{ fontWeight: '500' }}>{report.detectedBrand || '미확인'}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="card" style={{ marginBottom: '20px' }}>
-                <div className="card-header-with-border">
-                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '600' }}>상세 정보</h3>
-                </div>
-                <div className="card-body">
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '20px',
-                    marginBottom: '20px'
-                  }}>
-                    <div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>신고 시각</div>
-                      <div style={{ fontWeight: '500' }}>{new Date(report.reportedAt).toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>상태</div>
-                      <div style={{ fontWeight: '500' }}>{report.status}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>위치</div>
-                      <div style={{ fontWeight: '500' }}>{report.location}</div>
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '20px' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>AI 분석 결과</div>
-                    <div style={{
-                      backgroundColor: 'var(--primary-light)',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      fontWeight: '500'
-                    }}>
-                      {report.aiResult}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>신고 내용</div>
-                    <div style={{
-                      backgroundColor: 'var(--bg-color)',
-                      padding: '16px',
-                      borderRadius: '8px',
-                      lineHeight: '1.6',
-                      whiteSpace: 'pre-wrap'
-                    }}>
-                      {report.reportContent}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {report.status === 'PENDING' && (
-                <div className="card">
-                  <div className="card-header-with-border">
-                    <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '600' }}>신고 처리</h3>
-                  </div>
-                  <div className="card-body">
-                    <div style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '8px', color: 'var(--text-primary)' }}>
-                        사유
-                      </label>
-                      <input
-                        type="text"
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                        placeholder="처리 사유를 입력하세요"
-                        style={{ marginBottom: '0' }}
-                      />
-                    </div>
-
-                    <div style={{ marginBottom: '20px' }}>
-                      <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '500', marginBottom: '8px', color: 'var(--text-primary)' }}>
-                        벌금 (원)
-                      </label>
-                      <input
-                        type="number"
-                        value={fine}
-                        onChange={(e) => setFine(parseInt(e.target.value) || 0)}
-                        placeholder="벌금을 입력하세요"
-                        style={{ marginBottom: '0' }}
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <button className="success" onClick={() => handleAction('APPROVED')} style={{ flex: 1 }}>승인</button>
-                      <button className="danger" onClick={() => handleAction('REJECTED')} style={{ flex: 1 }}>반려</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="content-sidebar">
-              <Chatbot />
-            </div>
-          </div>
+        <div className="content-sidebar">
+          <Chatbot />
         </div>
       </div>
     </div>

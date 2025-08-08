@@ -11,6 +11,7 @@ interface Statistics {
 
 export default function Statistics() {
   const [stats, setStats] = useState<Statistics | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,284 +22,215 @@ export default function Statistics() {
         setStats(data);
       } catch (err) {
         alert('통계를 불러오지 못했습니다.');
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchStats();
   }, []);
 
-  if (!stats) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <div className="loading"></div>
-    </div>
-  );
+  const getApprovalRate = () => {
+    if (!stats || stats.totalCount === 0) return 0;
+    return Math.round((stats.approvedCount / stats.totalCount) * 100);
+  };
 
-  const pendingCount = stats.totalCount - stats.approvedCount - stats.rejectedCount;
-  const approvalRate = stats.totalCount > 0 ? Math.round((stats.approvedCount / stats.totalCount) * 100) : 0;
+  const getRejectionRate = () => {
+    if (!stats || stats.totalCount === 0) return 0;
+    return Math.round((stats.rejectedCount / stats.totalCount) * 100);
+  };
 
-  return (
-    <div className="sidebar-layout">
-      {/* 왼쪽 사이드바 */}
-      <div className="nav-sidebar">
-        <div className="sidebar-logo">
-          <h2>TRAFFICSOLUTION</h2>
-        </div>
-        
-        <nav style={{ flex: 1, paddingTop: '16px' }}>
-          <div className="nav-item" onClick={() => navigate('/main')}>
-            <span className="nav-item-icon">🏠</span>
-            HOME
-          </div>
-          <div className="nav-item" onClick={() => navigate('/main/reports')}>
-            <span className="nav-item-icon">📋</span>
-            신고 목록
-          </div>
-          <div className="nav-item" onClick={() => navigate('/main/monthly')}>
-            <span className="nav-item-icon">📅</span>
-            이번 달 신고
-          </div>
-          <div className="nav-item" onClick={() => navigate('/main/excel')}>
-            <span className="nav-item-icon">📥</span>
-            엑셀 다운로드
-          </div>
-          <div className="nav-item active">
-            <span className="nav-item-icon">📊</span>
-            통계
-          </div>
-        </nav>
-        
-        <div className="sidebar-footer">
-          <button className="outline" onClick={() => navigate('/main')}>
-            메인으로 돌아가기
-          </button>
+  const getPendingCount = () => {
+    if (!stats) return 0;
+    return stats.totalCount - stats.approvedCount - stats.rejectedCount;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="layout">
+        <div className="main-content">
+          <div className="loading">로딩 중...</div>
         </div>
       </div>
+    );
+  }
 
-      {/* 메인 컨텐츠 */}
-      <div className="main-layout">
-        {/* 헤더 */}
-        <div className="page-header">
-          <div className="page-header-content">
-            <div>
-              <h1 className="page-title">통계 페이지</h1>
-              <p className="page-subtitle">신고 처리 현황 및 통계 분석</p>
-            </div>
-            <div className="header-user-info">
-              <span>Logout</span>
-              <span>🔍 검색</span>
-              <span>A 관리자</span>
+  if (!stats) {
+    return (
+      <div className="layout">
+        <div className="main-content">
+          <div className="card">
+            <div className="card-body" style={{ textAlign: 'center', padding: '40px' }}>
+              <p>통계 데이터를 불러올 수 없습니다.</p>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => navigate('/main')}
+              >
+                메인으로 돌아가기
+              </button>
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        <div className="page-content">
-          <div className="page-content-inner">
-          {/* 주요 통계 카드들 */}
-          <div className="dashboard-grid" style={{ marginBottom: '30px' }}>
-            <div className="card gradient-card">
-              <div className="stats-card">
-                <div className="stats-number">{stats.totalCount}</div>
-                <div className="stats-label">전체 신고 수</div>
-                <div className="stats-percentage">100%</div>
-              </div>
+  return (
+    <div className="layout">
+      <div className="main-content">
+        {/* 페이지 헤더 */}
+        <div className="page-header">
+          <h1 className="page-title">신고 통계</h1>
+          <p className="page-description">전체 신고 현황을 한눈에 확인할 수 있습니다</p>
+          <div className="page-actions">
+            <button 
+              className="btn btn-secondary" 
+              onClick={() => navigate('/main')}
+            >
+              메인으로 돌아가기
+            </button>
+          </div>
+        </div>
+
+        {/* 주요 통계 */}
+        <div className="stats-grid" style={{ marginBottom: '32px' }}>
+          <div className="stat-card">
+            <div className="stat-value" style={{ color: 'var(--primary-blue)' }}>
+              {stats.totalCount.toLocaleString()}
             </div>
-            
-            <div className="card gradient-card blue">
-              <div className="stats-card">
-                <div className="stats-number">{stats.monthlyCount}</div>
-                <div className="stats-label">이번 달 신고 수</div>
-                <div className="stats-percentage">
-                  {stats.totalCount > 0 ? Math.round((stats.monthlyCount / stats.totalCount) * 100) : 0}%
+            <div className="stat-label">전체 신고</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value" style={{ color: 'var(--warning-orange)' }}>
+              {stats.monthlyCount.toLocaleString()}
+            </div>
+            <div className="stat-label">이번 달 신고</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value" style={{ color: 'var(--success-green)' }}>
+              {stats.approvedCount.toLocaleString()}
+            </div>
+            <div className="stat-label">승인된 신고</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value" style={{ color: 'var(--error-red)' }}>
+              {stats.rejectedCount.toLocaleString()}
+            </div>
+            <div className="stat-label">반려된 신고</div>
+          </div>
+        </div>
+
+        {/* 세부 통계 */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '24px' }}>
+          {/* 처리 현황 */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">📊 처리 현황</h2>
+            </div>
+            <div className="card-body">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>대기 중</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontWeight: '600' }}>{getPendingCount().toLocaleString()}건</span>
+                    <span className="status-badge status-pending">
+                      {stats.totalCount > 0 ? Math.round((getPendingCount() / stats.totalCount) * 100) : 0}%
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </div>
-            
-            <div className="card gradient-card green">
-              <div className="stats-card">
-                <div className="stats-number">{stats.approvedCount}</div>
-                <div className="stats-label">승인된 신고 수</div>
-                <div className="stats-percentage">{approvalRate}%</div>
-              </div>
-            </div>
-            
-            <div className="card gradient-card purple">
-              <div className="stats-card">
-                <div className="stats-number">{stats.rejectedCount}</div>
-                <div className="stats-label">반려된 신고 수</div>
-                <div className="stats-percentage">
-                  {stats.totalCount > 0 ? Math.round((stats.rejectedCount / stats.totalCount) * 100) : 0}%
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>승인</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontWeight: '600' }}>{stats.approvedCount.toLocaleString()}건</span>
+                    <span className="status-badge status-approved">{getApprovalRate()}%</span>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>반려</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontWeight: '600' }}>{stats.rejectedCount.toLocaleString()}건</span>
+                    <span className="status-badge status-rejected">{getRejectionRate()}%</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 처리 현황 상세 */}
-          <div className="grid grid-2" style={{ marginBottom: '30px' }}>
-            <div className="card">
-              <div className="card-header-with-border">
-                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '600' }}>처리 현황</h3>
-                <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                  전체 신고 처리 상태별 분석
-                </p>
-              </div>
-              <div className="card-body">
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>승인됨</span>
-                    <span style={{ fontSize: '0.9rem', color: 'var(--success-color)', fontWeight: '600' }}>
-                      {stats.approvedCount}건 ({approvalRate}%)
-                    </span>
-                  </div>
-                  <div className="progress-bar">
-                    <div className="progress-fill green" style={{ width: `${approvalRate}%` }}></div>
-                  </div>
-                </div>
-                
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>반려됨</span>
-                    <span style={{ fontSize: '0.9rem', color: 'var(--danger-color)', fontWeight: '600' }}>
-                      {stats.rejectedCount}건 ({stats.totalCount > 0 ? Math.round((stats.rejectedCount / stats.totalCount) * 100) : 0}%)
-                    </span>
-                  </div>
-                  <div className="progress-bar">
-                    <div className="progress-fill orange" style={{ width: `${stats.totalCount > 0 ? (stats.rejectedCount / stats.totalCount) * 100 : 0}%` }}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>대기 중</span>
-                    <span style={{ fontSize: '0.9rem', color: 'var(--warning-color)', fontWeight: '600' }}>
-                      {pendingCount}건 ({stats.totalCount > 0 ? Math.round((pendingCount / stats.totalCount) * 100) : 0}%)
-                    </span>
-                  </div>
-                  <div className="progress-bar">
-                    <div className="progress-fill blue" style={{ width: `${stats.totalCount > 0 ? (pendingCount / stats.totalCount) * 100 : 0}%` }}></div>
-                  </div>
-                </div>
-              </div>
+          {/* 월간 통계 */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">📅 월간 통계</h2>
             </div>
-
-            <div className="card">
-              <div className="card-header-with-border">
-                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '600' }}>월별 트렌드</h3>
-                <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                  이번 달 신고 접수 현황
-                </p>
-              </div>
-              <div className="card-body" style={{ textAlign: 'center' }}>
-                <div style={{ 
-                  width: '120px', 
-                  height: '120px', 
-                  borderRadius: '50%',
-                  background: 'var(--purple-gradient)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 20px auto'
-                }}>
-                  <div>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: 'white' }}>
-                      {stats.monthlyCount}
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: 'white', opacity: 0.9 }}>
-                      이번 달
-                    </div>
-                  </div>
+            <div className="card-body">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>이번 달 신고</span>
+                  <span style={{ fontWeight: '600', fontSize: '18px', color: 'var(--warning-orange)' }}>
+                    {stats.monthlyCount.toLocaleString()}건
+                  </span>
                 </div>
                 
-                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                  전체 신고의{' '}
-                  <span style={{ fontWeight: '600', color: 'var(--primary-color)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>전체 대비 비율</span>
+                  <span style={{ fontWeight: '600' }}>
                     {stats.totalCount > 0 ? Math.round((stats.monthlyCount / stats.totalCount) * 100) : 0}%
                   </span>
-                  가<br />이번 달에 접수되었습니다
+                </div>
+                
+                <div style={{ 
+                  padding: '12px', 
+                  background: 'var(--warning-orange-light)', 
+                  borderRadius: '8px', 
+                  textAlign: 'center' 
+                }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                    일평균 신고 수
+                  </div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--warning-orange)' }}>
+                    {Math.round(stats.monthlyCount / new Date().getDate())}건/일
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 종합 요약 */}
-          <div className="card" style={{ marginBottom: '30px' }}>
-            <div className="card-header-with-border">
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '600' }}>종합 요약</h3>
-              <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                전체 신고 처리 현황 요약
-              </p>
+          {/* 처리 효율성 */}
+          <div className="card" style={{ gridColumn: 'span 2' }}>
+            <div className="card-header">
+              <h2 className="card-title">⚡ 처리 효율성</h2>
             </div>
             <div className="card-body">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
-                <div style={{ textAlign: 'center', padding: '16px' }}>
-                  <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>📊</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px' }}>
-                    {approvalRate}%
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--success-green)', marginBottom: '8px' }}>
+                    {getApprovalRate()}%
                   </div>
-                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>승인율</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>승인율</div>
                 </div>
                 
-                <div style={{ textAlign: 'center', padding: '16px' }}>
-                  <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>⏱️</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px' }}>
-                    {stats.totalCount > 0 ? '2.3일' : '0일'}
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--error-red)', marginBottom: '8px' }}>
+                    {getRejectionRate()}%
                   </div>
-                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>평균 처리시간</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>반려율</div>
                 </div>
                 
-                <div style={{ textAlign: 'center', padding: '16px' }}>
-                  <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🚀</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px' }}>
-                    {pendingCount === 0 ? '100%' : '85%'}
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--primary-blue)', marginBottom: '8px' }}>
+                    {Math.round(((stats.approvedCount + stats.rejectedCount) / stats.totalCount) * 100)}%
                   </div>
-                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>시스템 효율성</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>처리 완료율</div>
                 </div>
                 
-                <div style={{ textAlign: 'center', padding: '16px' }}>
-                  <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>📈</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '4px' }}>
-                    +{Math.round((stats.monthlyCount / 30) * 7)}%
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--warning-orange)', marginBottom: '8px' }}>
+                    {getPendingCount()}
                   </div>
-                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>주간 증가율</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>대기 중</div>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* 빠른 액션 버튼들 */}
-          <div className="card">
-            <div className="card-header-with-border">
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '600' }}>빠른 액션</h3>
-              <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                자주 사용하는 기능에 빠르게 접근하세요
-              </p>
-            </div>
-            <div className="card-body">
-              <div className="quick-actions">
-                <div className="quick-action-btn" onClick={() => navigate('/main/reports')}>
-                  <div className="icon">📋</div>
-                  <div className="content">
-                    <div className="title">전체 신고 보기</div>
-                    <p className="description">모든 신고 내역 확인</p>
-                  </div>
-                </div>
-
-                <div className="quick-action-btn" onClick={() => navigate('/main/monthly')}>
-                  <div className="icon">📅</div>
-                  <div className="content">
-                    <div className="title">이번 달 신고</div>
-                    <p className="description">5월 신고 관리</p>
-                  </div>
-                </div>
-
-                <div className="quick-action-btn" onClick={() => navigate('/main/excel')}>
-                  <div className="icon">📥</div>
-                  <div className="content">
-                    <div className="title">엑셀 다운로드</div>
-                    <p className="description">데이터 내보내기</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
           </div>
         </div>
       </div>

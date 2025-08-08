@@ -6,14 +6,8 @@ import Notice from '../components/Notice';
 
 export default function MonthlyReports() {
   const [reports, setReports] = useState<Report[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth() + 1; // 1월 = 0이므로 +1
-  const date = today.getDate();
-  const formattedDate = `${year}.${String(month).padStart(2, '0')}.${String(date).padStart(2, '0')}`;
-  const formattedMonth = `${month}월`;
 
   useEffect(() => {
     const fetchMonthlyReports = async () => {
@@ -25,165 +19,127 @@ export default function MonthlyReports() {
         }
       } catch (err) {
         alert('이번 달 신고 목록을 불러오지 못했습니다.');
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchMonthlyReports();
   }, []);
 
-  return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-color)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div className="nav-sidebar">
-        <div className="sidebar-logo">
-          <h2>TRAFFICSOLUTION</h2>
-        </div>
-        
-        <nav style={{ flex: 1, paddingTop: '16px' }}>
-          <div className="nav-item" onClick={() => navigate('/main')}>
-            <span className="nav-item-icon">🏠</span>
-            HOME
-          </div>
-          
-          <div className="nav-item" onClick={() => navigate('/main/reports')}>
-            <span className="nav-item-icon">📋</span>
-            신고 목록
-          </div>
-          
-          <div className="nav-item active">
-            <span className="nav-item-icon">📅</span>
-            이번 달 신고
-          </div>
-          
-          <div className="nav-item" onClick={() => navigate('/main/excel')}>
-            <span className="nav-item-icon">📥</span>
-            엑셀 다운로드
-          </div>
-          
-          <div className="nav-item" onClick={() => navigate('/main/statistics')}>
-            <span className="nav-item-icon">📊</span>
-            통계
-          </div>
-        </nav>
-        
-        <div className="sidebar-footer">
-          <button className="outline" onClick={() => navigate('/main')}>
-            메인으로 돌아가기
-          </button>
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return <span className="status-badge status-approved">승인</span>;
+      case 'REJECTED':
+        return <span className="status-badge status-rejected">반려</span>;
+      default:
+        return <span className="status-badge status-pending">대기</span>;
+    }
+  };
+
+  const getCurrentMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}년 ${now.getMonth() + 1}월`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="layout">
+        <div className="main-content">
+          <div className="loading">로딩 중...</div>
         </div>
       </div>
+    );
+  }
 
-      <div className="main-layout">
-        <div className="page-header">
-          <div className="page-header-content">
-            <div>
-              <h1 className="page-title">이번 달 신고 현황</h1>
-              <p className="page-subtitle">{formattedDate}</p>
+  return (
+    <div className="layout">
+      <div className="content-with-sidebar">
+        <div className="content-main">
+          {/* 페이지 헤더 */}
+          <div className="page-header">
+            <h1 className="page-title">이번 달 신고 목록</h1>
+            <p className="page-description">{getCurrentMonth()}에 접수된 신고를 확인할 수 있습니다</p>
+            <div className="page-actions">
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => navigate('/main')}
+              >
+                메인으로 돌아가기
+              </button>
             </div>
-            <div className="header-user-info">
-              <span>Logout</span>
-              <span>🔍 검색</span>
-              <span>A 관리자</span>
+          </div>
+
+          {/* 이번 달 통계 */}
+          <div className="stats-grid" style={{ marginBottom: '24px' }}>
+            <div className="stat-card">
+              <div className="stat-value" style={{ color: 'var(--primary-blue)' }}>
+                {reports.length.toLocaleString()}
+              </div>
+              <div className="stat-label">이번 달 신고</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value" style={{ color: 'var(--success-green)' }}>
+                {reports.filter(r => r.status === 'APPROVED').length.toLocaleString()}
+              </div>
+              <div className="stat-label">승인</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value" style={{ color: 'var(--error-red)' }}>
+                {reports.filter(r => r.status === 'REJECTED').length.toLocaleString()}
+              </div>
+              <div className="stat-label">반려</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-value" style={{ color: 'var(--warning-orange)' }}>
+                {reports.filter(r => r.status === 'PENDING').length.toLocaleString()}
+              </div>
+              <div className="stat-label">대기</div>
+            </div>
+          </div>
+
+          {/* 신고 목록 */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">📅 {getCurrentMonth()} 신고 목록 ({reports.length}건)</h2>
+            </div>
+            <div className="card-body" style={{ padding: '0' }}>
+              {reports.length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  이번 달 신고가 없습니다.
+                </div>
+              ) : (
+                <div style={{ padding: '8px' }}>
+                  {reports.map((report) => (
+                    <div
+                      key={report.id}
+                      className="list-item"
+                      onClick={() => navigate(`/main/reports/${report.id}`)}
+                    >
+                      <div className="list-item-title">{report.title}</div>
+                      <div className="list-item-meta">
+                        <span>작성자: {report.reporterName}</span>
+                        <span>•</span>
+                        <span>{new Date(report.reportedAt).toLocaleDateString()}</span>
+                        <span>•</span>
+                        {getStatusBadge(report.status)}
+                        {report.detectedBrand && (
+                          <>
+                            <span>•</span>
+                            <span>브랜드: {report.detectedBrand}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="page-content">
-          <div className="content-with-sidebar">
-            <div className="content-main">
-              <div className="card gradient-card" style={{ marginBottom: '32px' }}>
-                <div className="monthly-stats-card">
-                  <div className="monthly-header">
-                    <div>
-                      <h3 className="monthly-title">{formattedMonth} 신고 현황</h3>
-                      <p className="monthly-subtitle">이번 달 접수된 신고를 확인하세요</p>
-                    </div>
-                    <span className="monthly-icon">📅</span>
-                  </div>
-                  
-                  <div className="monthly-stats">
-                    <div className="monthly-stat">
-                      <div className="monthly-number">{reports.length}</div>
-                      <div className="monthly-label">전체 신고</div>
-                    </div>
-                    <div className="monthly-stat">
-                      <div className="monthly-number">
-                        {reports.filter(r => r.status === 'APPROVED').length}
-                      </div>
-                      <div className="monthly-label">승인 완료</div>
-                    </div>
-                    <div className="monthly-stat">
-                      <div className="monthly-number">
-                        {reports.filter(r => r.status === 'PENDING').length}
-                      </div>
-                      <div className="monthly-label">대기 중</div>
-                    </div>
-                    <div className="monthly-stat">
-                      <div className="monthly-number">
-                        {reports.length > 0 ? Math.round((reports.filter(r => r.status === 'APPROVED').length / reports.length) * 100) : 0}%
-                      </div>
-                      <div className="monthly-label">처리율</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="card">
-                <div className="card-header-with-border">
-                  <h3>이번 달 신고 목록</h3>
-                  <p>{formattedMonth}에 접수된 총 {reports.length}건의 신고</p>
-                </div>
-                
-                <div className="card-body">
-                  {reports.length === 0 ? (
-                    <div className="empty-state">
-                      <div className="empty-icon">📅</div>
-                      <p>이번 달에는 아직 신고가 없습니다.</p>
-                    </div>
-                  ) : (
-                    <div className="report-list">
-                      {reports.map((report) => (
-                        <div
-                          key={report.id}
-                          className="report-list-item"
-                          onClick={() => navigate(`/main/reports/${report.id}`)}
-                        >
-                          <div className="report-header">
-                            <div className="report-info">
-                              <h4 className="report-title">{report.title}</h4>
-                              <div className="report-meta">
-                                <span>신고자: {report.reporterName}</span>
-                                <span>피신고자: {report.targetName}</span>
-                              </div>
-                              <div className="report-sub-meta">
-                                <span>브랜드: {report.detectedBrand || '미확인'}</span>
-                                <span>신고시각: {new Date(report.reportedAt).toLocaleDateString('ko-KR')}</span>
-                              </div>
-                            </div>
-                            <div className="report-status">
-                              <span className={`status-badge status-${report.status.toLowerCase()}`}>
-                                {report.status === 'PENDING' && '대기중'}
-                                {report.status === 'APPROVED' && '승인됨'}
-                                {report.status === 'REJECTED' && '반려됨'}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {report.location && (
-                            <div className="report-location-border">
-                              📍 {report.location}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="content-sidebar">
-              <Notice />
-            </div>
-          </div>
+        <div className="content-sidebar">
+          <Notice />
         </div>
       </div>
     </div>

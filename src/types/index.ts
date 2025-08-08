@@ -16,6 +16,7 @@ export interface Report {
   detectedBrand: string;
   location: string;
   reportContent: string;
+  imageUrl?: string | null;  
 }
 
 export interface Notice {

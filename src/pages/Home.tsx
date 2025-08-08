@@ -128,6 +128,19 @@ export default function Home() {
               승인된 신고 데이터를 엑셀 파일로 다운로드합니다
             </p>
           </div>
+
+          <div 
+            className="dashboard-card"
+            onClick={() => navigate('/main/chatbot')}
+          >
+            <div className="dashboard-card-icon icon-blue">
+              🤖
+            </div>
+            <h3 className="dashboard-card-title">법률 안내 챗봇</h3>
+            <p className="dashboard-card-description">
+              전동킥보드 관련 법률에 대해 AI에게 질문할 수 있습니다
+            </p>
+          </div>
         </div>
       </div>
     </div>

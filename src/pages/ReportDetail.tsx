@@ -120,6 +120,36 @@ export default function ReportDetail() {
               <h2 className="card-title">📄 신고 정보</h2>
             </div>
             <div className="card-body">
+              {/* 신고 이미지가 있는 경우 */}
+              {report.imageUrl && (
+                <div style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid var(--border-light)' }}>
+                  <div style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500', marginBottom: '8px' }}>
+                    신고 이미지
+                  </div>
+                  <div style={{ 
+                    maxWidth: '400px',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    boxShadow: 'var(--shadow-light)'
+                  }}>
+                    <img 
+                      src={report.imageUrl} 
+                      alt="신고 이미지"
+                      style={{ 
+                        width: '100%', 
+                        height: 'auto',
+                        display: 'block'
+                      }}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                 <div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

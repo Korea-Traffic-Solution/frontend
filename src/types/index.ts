@@ -1,22 +1,25 @@
-export interface Report {
-  id: number;
+// src/types.ts
+export interface ReportSimple {
+  id: string;
   title: string;
-  description: string;
   reporterName: string;
-  targetName: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  reportedAt: string;
-  address: string;
-  gps: string;
-  reason: string;
-  fine: number;
-  brand: string;
-  approvedAt?: string;
-  aiResult: string;
-  detectedBrand: string;
-  location: string;
-  reportContent: string;
-  imageUrl?: string | null;  
+  reportedAt?: string | null; // LocalDateTime 문자열
+}
+
+export interface ConclusionDetail {
+  id: string;
+  aiConclusion: string[];
+  confidence?: number | null;
+  date?: string | null;            
+  detectedBrand?: string | null;
+  gpsInfo?: string | null;
+  imageUrl?: string | null;
+  region?: string | null;
+  reportImgUrl?: string | null;
+  result?: string | null;
+  userId?: string | null;
+  violation?: string | null;
 }
 
 export interface Notice {

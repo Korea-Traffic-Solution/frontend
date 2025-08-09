@@ -1,28 +1,23 @@
+// src/pages/ReportDetail.tsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
-import type { Report } from '../types';
+import type { ConclusionDetail } from '../types';
 import Chatbot from '../components/Chatbot';
 
 export default function ReportDetail() {
   const { id } = useParams();
-  const [report, setReport] = useState<Report | null>(null);
-  const [reason, setReason] = useState('');
-  const [fine, setFine] = useState(0);
+  const [data, setData] = useState<ConclusionDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchDetail = async () => {
+      if (!id) return;
       try {
         const res = await axios.get(`/reports/${id}`);
-        console.log('상세 응답:', res.data);
-        if (Array.isArray(res.data.results) && res.data.results.length > 0) {
-          setReport(res.data.results[0]);
-        } else {
-          throw new Error('신고 정보 없음');
-        }
+        const item = Array.isArray(res.data?.results) ? res.data.results[0] : null;
+        setData(item ?? null);
       } catch (err) {
         console.error('❌ 상세 정보 불러오기 실패:', err);
         alert('상세 정보를 불러오지 못했습니다.');
@@ -32,39 +27,6 @@ export default function ReportDetail() {
     };
     fetchDetail();
   }, [id]);
-
-  const handleAction = async (status: 'APPROVED' | 'REJECTED') => {
-    if (!reason.trim()) {
-      alert('사유를 입력해주세요.');
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      await axios.patch(`/reports/${id}`, {
-        approve: status === 'APPROVED',
-        reason,
-        fine: status === 'APPROVED' ? fine : undefined,
-      });
-      alert(`신고가 ${status === 'APPROVED' ? '승인' : '반려'}되었습니다.`);
-      navigate('/main/reports');
-    } catch (err) {
-      alert('처리에 실패했습니다.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'APPROVED':
-        return <span className="status-badge status-approved">승인</span>;
-      case 'REJECTED':
-        return <span className="status-badge status-rejected">반려</span>;
-      default:
-        return <span className="status-badge status-pending">대기</span>;
-    }
-  };
 
   if (isLoading) {
     return (
@@ -76,17 +38,14 @@ export default function ReportDetail() {
     );
   }
 
-  if (!report) {
+  if (!data) {
     return (
       <div className="layout">
         <div className="main-content">
           <div className="card">
-            <div className="card-body" style={{ textAlign: 'center', padding: '40px' }}>
+            <div className="card-body" style={{ textAlign: 'center', padding: 40 }}>
               <p>신고를 찾을 수 없습니다.</p>
-              <button 
-                className="btn btn-primary" 
-                onClick={() => navigate('/main/reports')}
-              >
+              <button className="btn btn-primary" onClick={() => navigate('/main/reports')}>
                 목록으로 돌아가기
               </button>
             </div>
@@ -96,166 +55,95 @@ export default function ReportDetail() {
     );
   }
 
+  const img = data.imageUrl || data.reportImgUrl;
+
   return (
     <div className="layout">
       <div className="content-with-sidebar">
         <div className="content-main">
-          {/* 페이지 헤더 */}
           <div className="page-header">
             <h1 className="page-title">신고 상세</h1>
-            <p className="page-description">신고 내용을 확인하고 승인 또는 반려를 결정해주세요</p>
+            <p className="page-description">Firestore Conclusion 데이터를 그대로 표시합니다</p>
             <div className="page-actions">
-              <button 
-                className="btn btn-secondary" 
-                onClick={() => navigate('/main/reports')}
-              >
+              <button className="btn btn-secondary" onClick={() => navigate('/main/reports')}>
                 목록으로 돌아가기
               </button>
             </div>
           </div>
 
-          {/* 신고 정보 */}
-          <div className="card" style={{ marginBottom: '24px' }}>
+          <div className="card" style={{ marginBottom: 24 }}>
             <div className="card-header">
               <h2 className="card-title">📄 신고 정보</h2>
             </div>
             <div className="card-body">
-              {/* 신고 이미지가 있는 경우 */}
-              {report.imageUrl && (
-                <div style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid var(--border-light)' }}>
-                  <div style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500', marginBottom: '8px' }}>
+              {img && (
+                <div style={{ marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid var(--border-light)' }}>
+                  <div style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500, marginBottom: 8 }}>
                     신고 이미지
                   </div>
-                  <div style={{ 
-                    maxWidth: '400px',
-                    border: '1px solid var(--border-light)',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    boxShadow: 'var(--shadow-light)'
-                  }}>
-                    <img 
-                      src={report.imageUrl} 
-                      alt="신고 이미지"
-                      style={{ 
-                        width: '100%', 
-                        height: 'auto',
-                        display: 'block'
-                      }}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
+                  <div style={{ maxWidth: 420, border: '1px solid var(--border-light)', borderRadius: 8, overflow: 'hidden', boxShadow: 'var(--shadow-light)' }}>
+                    <img src={img} alt="신고 이미지" style={{ width: '100%', display: 'block' }} />
                   </div>
                 </div>
               )}
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
                 <div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div>
-                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>제목</span>
-                      <div style={{ fontSize: '16px', fontWeight: '600', marginTop: '4px' }}>{report.title}</div>
+                      <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500 }}>제목</span>
+                      <div style={{ fontSize: 16, fontWeight: 600, marginTop: 4 }}>{data.violation || '제목 없음'}</div>
                     </div>
                     <div>
-                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>신고자</span>
-                      <div style={{ fontSize: '16px', marginTop: '4px' }}>{report.reporterName}</div>
+                      <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500 }}>신고자 ID</span>
+                      <div style={{ fontSize: 16, marginTop: 4 }}>{data.userId || '익명'}</div>
                     </div>
                     <div>
-                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>피신고자</span>
-                      <div style={{ fontSize: '16px', marginTop: '4px' }}>{report.targetName}</div>
+                      <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500 }}>신고 시각(원본)</span>
+                      <div style={{ fontSize: 16, marginTop: 4 }}>{data.date || '—'}</div>
                     </div>
                   </div>
                 </div>
+
                 <div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div>
-                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>신고 시각</span>
-                      <div style={{ fontSize: '16px', marginTop: '4px' }}>{new Date(report.reportedAt).toLocaleString()}</div>
+                      <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500 }}>감지된 브랜드</span>
+                      <div style={{ fontSize: 16, marginTop: 4 }}>{data.detectedBrand || '미확인'}</div>
                     </div>
                     <div>
-                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>상태</span>
-                      <div style={{ marginTop: '4px' }}>{getStatusBadge(report.status)}</div>
+                      <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500 }}>GPS</span>
+                      <div style={{ fontSize: 16, marginTop: 4 }}>{data.gpsInfo || '—'}</div>
                     </div>
                     <div>
-                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>감지된 브랜드</span>
-                      <div style={{ fontSize: '16px', marginTop: '4px' }}>{report.detectedBrand || '미확인'}</div>
+                      <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500 }}>지역</span>
+                      <div style={{ fontSize: 16, marginTop: 4 }}>{data.region || '—'}</div>
                     </div>
                   </div>
                 </div>
               </div>
-              
-              <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border-light)' }}>
-                <div style={{ marginBottom: '12px' }}>
-                  <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>위치</span>
-                  <div style={{ fontSize: '16px', marginTop: '4px' }}>{report.location}</div>
-                </div>
-                <div style={{ marginBottom: '12px' }}>
-                  <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>AI 분석 결과</span>
-                  <div style={{ fontSize: '16px', marginTop: '4px' }}>{report.aiResult}</div>
-                </div>
-                <div>
-                  <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>신고 내용</span>
-                  <div style={{ 
-                    fontSize: '16px', 
-                    marginTop: '4px', 
-                    padding: '12px', 
-                    background: 'var(--secondary-gray)', 
-                    borderRadius: '8px',
-                    lineHeight: '1.6'
-                  }}>
-                    {report.reportContent}
+
+              <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--border-light)' }}>
+                <div style={{ marginBottom: 12 }}>
+                  <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500 }}>AI 분석 결과</span>
+                  <div style={{ fontSize: 16, marginTop: 4 }}>
+                    {data.aiConclusion && data.aiConclusion.length > 0 ? data.aiConclusion.join(', ') : '분석 결과 없음'}
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 처리 섹션 */}
-          <div className="card">
-            <div className="card-header">
-              <h2 className="card-title">⚖️ 신고 처리</h2>
-            </div>
-            <div className="card-body">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div className="form-group">
-                  <label className="form-label">처리 사유 *</label>
-                  <input 
-                    className="form-input"
-                    placeholder="승인 또는 반려 사유를 입력해주세요"
-                    value={reason} 
-                    onChange={(e) => setReason(e.target.value)}
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label className="form-label">벌금 (원)</label>
-                  <input
-                    className="form-input"
-                    type="number"
-                    placeholder="승인 시 부과할 벌금을 입력해주세요"
-                    value={fine}
-                    onChange={(e) => setFine(parseInt(e.target.value) || 0)}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px', paddingTop: '12px' }}>
-                  <button 
-                    className="btn btn-success"
-                    onClick={() => handleAction('APPROVED')}
-                    disabled={isProcessing}
-                    style={{ flex: 1 }}
+                <div>
+                  <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500 }}>신고 내용</span>
+                  <div
+                    style={{
+                      fontSize: 16,
+                      marginTop: 4,
+                      padding: 12,
+                      background: 'var(--secondary-gray)',
+                      borderRadius: 8,
+                      lineHeight: 1.6
+                    }}
                   >
-                    {isProcessing ? '처리 중...' : '승인'}
-                  </button>
-                  <button 
-                    className="btn btn-danger"
-                    onClick={() => handleAction('REJECTED')}
-                    disabled={isProcessing}
-                    style={{ flex: 1 }}
-                  >
-                    {isProcessing ? '처리 중...' : '반려'}
-                  </button>
+                    {data.violation || '—'}
+                  </div>
                 </div>
               </div>
             </div>

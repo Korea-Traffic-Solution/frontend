@@ -1,6 +1,8 @@
+// src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import React from 'react';
 import Login from './pages/Login';
+import Signup from './pages/SignUp';
 import Home from './pages/Home';
 import ReportList from './pages/ReportList';
 import ReportDetail from './pages/ReportDetail';
@@ -18,9 +20,12 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* 공개 라우트 */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} /> {/* ✅ /signup 경로 등록 */}
 
+        {/* 보호된 라우트 */}
         <Route
           path="/main"
           element={
@@ -62,21 +67,24 @@ function App() {
           }
         />
         <Route
-           path="/main/statistics"
-           element={
-           <ProtectedRoute>
+          path="/main/statistics"
+          element={
+            <ProtectedRoute>
               <Statistics />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/main/chatbot"
-        element={
-          <ProtectedRoute>
-            <ChatbotPage />
-          </ProtectedRoute>
-        }
-      />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/main/chatbot"
+          element={
+            <ProtectedRoute>
+              <ChatbotPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 404 */}
+        <Route path="*" element={<div>404</div>} />
       </Routes>
     </BrowserRouter>
   );
